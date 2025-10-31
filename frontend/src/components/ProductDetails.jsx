@@ -1,4 +1,3 @@
-// src/pages/ProductDetails.jsx
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -13,9 +12,27 @@ export default function ProductDetails() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`https://dummyjson.com/products/${id}`);
+        const res = await fetch(
+          `https://mstech-hive-ecom.onrender.com/api/products/${id}`
+        );
         const data = await res.json();
-        setProduct(data);
+        console.log("Product API response:", data);
+
+        // Support different shapes: data.product or data itself.
+        const p = data.product || data || {};
+
+        // Normalize fields: id/_id and image sources
+        const normalized = {
+          ...p,
+          id: p._id || p.id || p.productId || id,
+          thumbnail:
+            p.thumbnail ||
+            p.image ||
+            (Array.isArray(p.images) && p.images.length ? p.images[0] : null) ||
+            null,
+        };
+
+        setProduct(normalized);
       } catch (error) {
         console.error("Failed to load product details:", error);
       }
@@ -31,14 +48,26 @@ export default function ProductDetails() {
       return;
     }
 
+    // keep cart items consistent by storing id (normalized)
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-    const existingIndex = cart.findIndex((item) => item.id === product.id);
+    const prodId = product.id || product._id || product.productId;
+
+    // find existing by matching either id or _id saved earlier
+    const existingIndex = cart.findIndex(
+      (item) => item.id === prodId || item._id === prodId
+    );
+
+    const itemToStore = {
+      ...product,
+      id: prodId, // ensure we're storing normalized id
+      quantity: finalQuantity,
+    };
 
     if (existingIndex !== -1) {
-      cart[existingIndex].quantity = finalQuantity;
+      cart[existingIndex] = { ...cart[existingIndex], quantity: finalQuantity };
     } else {
-      cart.push({ ...product, quantity: finalQuantity });
+      cart.push(itemToStore);
     }
 
     localStorage.setItem("cart", JSON.stringify(cart));
@@ -56,9 +85,7 @@ export default function ProductDetails() {
   };
 
   const handleQuantityChange = (type) => {
-    setQuantity((prev) =>
-      type === "inc" ? prev + 1 : prev > 1 ? prev - 1 : 1
-    );
+    setQuantity((prev) => (type === "inc" ? prev + 1 : prev > 1 ? prev - 1 : 1));
   };
 
   if (!product)
@@ -68,13 +95,25 @@ export default function ProductDetails() {
       </div>
     );
 
+  // choose image with fallback
+  const imageSrc =
+    product.thumbnail ||
+    product.image ||
+    (Array.isArray(product.images) && product.images[0]) ||
+    "https://via.placeholder.com/600x400?text=No+Image";
+
   return (
-    <div className="min-h-screen bg-custom-color2 flex justify-center items-center"> 
+    <div className="min-h-screen bg-custom-color2 flex justify-center items-center">
       <div className="max-w-6xl mx-auto bg-gradient-to-br from-gray-900 to-black py-16 px-4 text-white font-poppins">
         <div className="flex flex-col md:flex-row gap-10 items-center">
           <img
-            src={product.thumbnail}
-            alt={product.title}
+            src={imageSrc}
+            alt={product.title || "Product"}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src =
+                "https://via.placeholder.com/600x400?text=No+Image";
+            }}
             className="w-full max-w-md rounded-xl shadow-xl object-cover"
           />
           <div className="flex-1">
@@ -134,3 +173,4 @@ export default function ProductDetails() {
     </div>
   );
 }
+

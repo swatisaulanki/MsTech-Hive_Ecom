@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 const Payment = () => {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [total, setTotal] = useState(0);
+  const [message, setMessage]=useState("")
   const navigate = useNavigate();
 
   // Fetch cart items and total price
@@ -18,12 +19,12 @@ const Payment = () => {
 
   const handlePayment = () => {
     if (!paymentMethod) {
-      alert("Please select a payment method.");
+      setMessage("Please select a payment method.");
       return;
     }
 
     // After payment, proceed to the success page
-    alert("Payment Successful!");
+    setMessage("Payment Successful!");
     localStorage.removeItem("cart");
     localStorage.removeItem("shippingAddress");
     navigate("/order");
@@ -32,6 +33,12 @@ const Payment = () => {
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-4 font-poppins">
       <div className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
+         {/* success message */}
+        {message && (
+          <p className="text-green-600 mt-4 text-center font-medium animate-pulse">
+            {message}
+          </p>
+        )}
         <h2 className="text-2xl font-bold mb-4">Payment</h2>
 
         {/* Payment Methods */}

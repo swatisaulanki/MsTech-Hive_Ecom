@@ -85,7 +85,7 @@ const Contact = () => {
               <MapPin className="w-6 h-6" />
               <div>
                 <p className="font-medium">Address</p>
-                <p>Gondia Maharashtra</p>
+                <p>Bangalore Karnataka</p>
               </div>
             </div>
           </div>

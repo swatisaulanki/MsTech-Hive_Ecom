@@ -14,11 +14,10 @@ import Footer from './components/Footer';
 // Pages
 import Home from './pages/Home';
 import ShopNow from "./pages/ShopNow";
-import Categories from "./pages/Categories";
+import Categories from "./components/Categories";
 import CategoryPage from "./pages/CategoryPage ";
 import BlogPage from './pages/BlogPage';
-import Cart from './pages/Cart';
-import Account from './pages/Account';
+import Cart from './components/Cart';
 import Orders from './pages/Orders';
 import Offer from './pages/Offer';
 import AboutUs from './pages/AboutUs';
@@ -27,8 +26,8 @@ import FaqPage from "./pages/FaqPage";
 import Contact from  "./pages/Contact";
 import ReturnPolicy from "./pages/ReturnPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Login from './Login/Login';
+import Register from './Login/Register';
 import ScrollToTop from './components/ScrollToTop';
 import ProductDetails from './components/ProductDetails';
 import { ToastContainer } from 'react-toastify';
@@ -40,6 +39,8 @@ import SearchResults from './pages/SearchResults';
 import ProceedToCheckout from './pages/ProceedToCheckout';
 import Payment from './pages/Payment';
 import OrderSuccess from './pages/OrderSuccess';
+import AdminDashboard from './pages/AdminDashboard';
+import ProfileUpdate from './components/ProfileUpdate';
 
 const App = () => {
   return (
@@ -72,16 +73,10 @@ const App = () => {
         <Route path="/proceed" element={<ProceedToCheckout/>} />
         <Route path="/payment" element={<Payment/>} />
         <Route path="/order" element={<OrderSuccess/>} />
-
+        <Route path="/admin" element={<AdminDashboard/>} />
+        <Route path="/profileupdate" element={<ProfileUpdate/>}/>
         {/* Protected Routes */}
-        <Route
-          path="/account"
-          element={
-            <ProtectedRoute>
-              <Account />
-            </ProtectedRoute>
-          }
-        />
+       
         <Route
           path="/orders"
           element={

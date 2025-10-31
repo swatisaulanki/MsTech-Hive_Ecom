@@ -5,6 +5,9 @@ import { Typewriter } from "react-simple-typewriter";
 import Faq from "../components/Faq";
 import HappyUsersChart from "../components/HappyUsersChart";
 import { motion } from "framer-motion";
+import ProductDetails from "../components/ProductDetails";
+import ShopNow from "./ShopNow";
+import Testimonials from "../components/Testimonials";
 
 const Home = () => {
   return (
@@ -77,27 +80,11 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Categories */}
-      <section id="categories" className="py-12 px-4 bg-white">
-        <h2 className="text-2xl md:text-4xl font-bold text-white text-center mb-8">
-          Categories
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
-          {["Electronics", "Fashion", "Grocery", "Accessories"].map((cat, idx) => (
-            <Link
-              to={`/category/${cat.toLowerCase()}`}
-              key={idx}
-              className=" bg-slate-500 text-white rounded-lg p-6 text-center hover:shadow-xl transition duration-300 block"
-            >
-              <div className="text-3xl mb-2">📦</div>
-              <p className="font-medium">{cat}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
+  
 
       {/* Featured Products */}
-      <FeaturedProducts />
+      {/* <FeaturedProducts /> */}
+        <ShopNow/>
       <section className=" bg-custom-color3 py-10 px-4 md:px-20">
   <h2 className="md:text-4xl  text-2xl font-bold text-center  text-white mb-8">Why Choose MsTechHive?</h2>
   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
@@ -118,121 +105,30 @@ const Home = () => {
     </div>
   </div>
 </section>
-
+    {/* Categories */}
+      <section id="categories" className="py-12 px-4 bg-white">
+        <h2 className="text-2xl md:text-4xl font-bold text-white text-center mb-8">
+          Categories
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          {["Electronics", "Fashion", "Grocery", "Accessories"].map((cat, idx) => (
+            <Link
+              to={`/category/${cat.toLowerCase()}`}
+              key={idx}
+              className=" bg-slate-500 text-white rounded-lg p-6 text-center hover:shadow-xl transition duration-300 block"
+            >
+              <div className="text-3xl mb-2">📦</div>
+              <p className="font-medium">{cat}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
       {/* Happy Users Chart */}
       <HappyUsersChart />
       {/* // Testimonials Section */}
-      <section className="testimonials bg-gradient-to-r from-blue-700 to-blue-500 py-20">
-  <div className="container mx-auto px-4 text-center">
-    <h2 className="text-4xl font-extrabold text-white mb-16">What Our Customers Say</h2>
+    
 
-    {/* Testimonial Cards */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-
-      {/* Testimonial 1 */}
-      <div className="testimonial-card relative bg-white p-8 rounded-2xl shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-2xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-teal-900 opacity-50 rounded-2xl z-0"></div>
-        <img
-          src="https://www.vhv.rs/dpng/d/530-5303742_customer-satisfaction-blue-icon-png-clipart-png-download.png"
-          alt="Customer 1"
-          className="w-40 h-32 rounded-full border-4 border-white mx-auto mb-6 z-10"
-        />
-        <p className="text-xl text-gray-800 font-semibold italic mb-6 z-10">
-          "MsTechHive  provided an excellent experience. The checkout was easy, and the product was amazing!"
-        </p>
-        <h3 className="text-2xl font-bold text-gray-900 z-10">Swati</h3>
-        <p className="text-sm text-gray-500 z-10">Verified Buyer</p>
-        {/* Star Ratings */}
-        <div className="flex justify-center mt-4 z-10">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-        </div>
-      </div>
-
-      {/* Testimonial 2 */}
-      <div className="testimonial-card relative bg-white p-8 rounded-2xl shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-2xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-purple-800 opacity-50 rounded-2xl z-0"></div>
-        <img
-          src="https://www.vhv.rs/dpng/d/530-5303742_customer-satisfaction-blue-icon-png-clipart-png-download.png"
-          alt="Customer 2"
-          className="w-40 h-32 rounded-full border-4 border-white mx-auto mb-6 z-10"
-        />
-        <p className="text-xl text-gray-800 font-semibold italic mb-6 z-10">
-          "Fantastic service! Everything arrived as promised, and the customer support is second to none."
-        </p>
-        <h3 className="text-2xl font-bold text-gray-900 z-10">Krush</h3>
-        <p className="text-sm text-gray-500 z-10">Verified Buyer</p>
-        {/* Star Ratings */}
-        <div className="flex justify-center mt-4 z-10">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-        </div>
-      </div>
-
-      {/* Testimonial 3 */}
-      <div className="testimonial-card relative bg-white p-8 rounded-2xl shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-2xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-600 opacity-50 rounded-2xl z-0"></div>
-        <img
-          src="https://www.vhv.rs/dpng/d/530-5303742_customer-satisfaction-blue-icon-png-clipart-png-download.png"
-          alt="Customer 3"
-          className="w-40 h-32 rounded-full border-4 border-white mx-auto mb-6 z-10"
-        />
-        <p className="text-xl text-gray-800 font-semibold italic mb-6 z-10">
-          "Quick delivery, amazing quality. MsTechHive  made online shopping so easy and fun!"
-        </p>
-        <h3 className="text-2xl font-bold text-gray-900 z-10">Swatiskrush</h3>
-        <p className="text-sm text-gray-500 z-10">Verified Buyer</p>
-        {/* Star Ratings */}
-        <div className="flex justify-center mt-4 z-10">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6 text-yellow-400">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-
+     <Testimonials/>
 
       {/* Newsletter */}
       <section className="py-12 px-4 bg-white font-poppins">

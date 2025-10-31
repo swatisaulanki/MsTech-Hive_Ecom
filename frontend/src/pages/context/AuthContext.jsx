@@ -1,79 +1,142 @@
-// src/context/AuthContext.jsx
-import React, { createContext, useContext, useState, useEffect } from "react";
+
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
-// Create AuthContext
 const AuthContext = createContext();
 
-// AuthProvider component to wrap around your app
+
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);  // Holds current user data
-  const [users, setUsers] = useState([]);  // Simulate a list of registered users (this can be replaced with real database interaction)
   const navigate = useNavigate();
 
-  // Check if user is logged in when the app starts
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) {
-      setUser(storedUser);
+  // Safe localStorage parse helper
+  const safeParse = (key) => {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.warn("Failed to parse localStorage key", key, e);
+      return null;
     }
+  };
 
-    // Simulate fetching existing users (this would come from your backend in a real app)
-    const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
-    setUsers(storedUsers);
+  // Initialize state from localStorage (token + user)
+  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
+  const [user, setUserState] = useState(() => safeParse("user") || null);
+
+  // Optional: simulated users list for local register/login (dev only)
+  const [users, setUsers] = useState(() => safeParse("users") || []);
+
+  // Wrap setUser to keep localStorage in sync
+  const setUser = useCallback((newUser) => {
+    try {
+      if (newUser) {
+        localStorage.setItem("user", JSON.stringify(newUser));
+      } else {
+        localStorage.removeItem("user");
+      }
+    } catch (e) {
+      console.warn("Error saving user to localStorage", e);
+    }
+    setUserState(newUser);
   }, []);
 
-  // Function to check if an email already exists
+  // Wrap setToken to keep localStorage in sync
+  const updateToken = useCallback((newToken) => {
+    try {
+      if (newToken) localStorage.setItem("token", newToken);
+      else localStorage.removeItem("token");
+    } catch (e) {
+      console.warn("Error saving token to localStorage", e);
+    }
+    setToken(newToken);
+  }, []);
+
+  // Keep state in sync if another tab updates localStorage
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (!e.key) {
+        // e.key === null when clear() is called
+        setUserState(safeParse("user"));
+        setToken(localStorage.getItem("token") || null);
+        return;
+      }
+      if (e.key === "user") {
+        setUserState(e.newValue ? JSON.parse(e.newValue) : null);
+      }
+      if (e.key === "token") {
+        setToken(e.newValue || null);
+      }
+      if (e.key === "users") {
+        setUsers(e.newValue ? JSON.parse(e.newValue) : []);
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
+  // check if email exists in simulated users list
   const checkIfEmailExists = (email) => {
-    // Check if the email exists in the users array
-    return users.some((user) => user.email === email);
+    return users.some((u) => String(u.email).toLowerCase() === String(email).toLowerCase());
   };
 
-  // Login function
-  const login = (email, password) => {
-    // Find the user by email
-    const foundUser = users.find((user) => user.email === email);
-    
-    // If the user exists and password matches
-    if (foundUser && foundUser.password === password) {
-      setUser(foundUser);
-      localStorage.setItem("user", JSON.stringify(foundUser));
-      return true;
-    } else {
-      return false; // Invalid email or password
-    }
-  };
-
-  // Register function
+  // register (simulated local registration)
   const register = (name, email, password) => {
-    if (checkIfEmailExists(email)) {
-      return false; // Email already exists, return false
+    if (checkIfEmailExists(email)) return false;
+    const newUser = { id: Date.now().toString(), name, email, password };
+    const updated = [...users, newUser];
+    setUsers(updated);
+    try {
+      localStorage.setItem("users", JSON.stringify(updated));
+    } catch (e) {
+      console.warn("Failed saving users to localStorage", e);
     }
-
-    // This would be where you handle registration logic with your backend
-    const newUser = { name, email, password };  // Save the password as well for login validation
-    setUsers([...users, newUser]);  // Update users list
-    localStorage.setItem("users", JSON.stringify([...users, newUser]));  // Save users in localStorage
+    // set as current user
     setUser(newUser);
-    localStorage.setItem("user", JSON.stringify(newUser));
+    // no token in this dev flow
+    updateToken(null);
     return true;
   };
 
-  // Logout function
+  //  login (simulated local login)
+  const login = (email, password) => {
+    const found = users.find((u) => u.email === email && u.password === password);
+    if (!found) return false;
+    setUser(found);
+    updateToken(null); // no token in local simulation
+    return true;
+  };
+
+  // Logout: clear token + user and navigate to login
   const logout = () => {
+    updateToken(null);
     setUser(null);
-    localStorage.removeItem("user");
     navigate("/login");
   };
 
-  return (
-    <AuthContext.Provider value={{ user, login, register, logout, checkIfEmailExists }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  // Optionally, add method to update parts of user (e.g., avatar update)
+  const updateUser = (patch) => {
+    const newUser = { ...(user || {}), ...patch };
+    setUser(newUser);
+  };
+
+  // Expose auth value
+  const value = {
+    user,
+    setUser,     // call this after successful server login to update context immediately
+    updateUser,
+    token,
+    setToken: updateToken,
+    login,       // dev helper (you can remove in production)
+    register,    // dev helper (you can remove in production)
+    logout,
+    checkIfEmailExists,
+    users,       // list of local users (dev)
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Custom hook to use AuthContext in any component
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
+export default AuthContext;
