@@ -23,8 +23,8 @@ app.use(morgan("dev"));
 connectDB();
 
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);    // login / register
+app.use("/api/users", userRoutes);        
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
