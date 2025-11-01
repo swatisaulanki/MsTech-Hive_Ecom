@@ -35,6 +35,11 @@ It also includes an **Admin Dashboard** for managing products and viewing orders
 | **Tailwind CSS** | (Optional) For responsive and modern UI styling |
 
 ---
+## cd backend
+node server.js
+
+## cd frontend
+npm start
 
 ---
 
@@ -66,22 +71,22 @@ It also includes an **Admin Dashboard** for managing products and viewing orders
 
 
 ### 🏠 Home Page
-![Home Page 1](./images/home1.PNG)
+<img src="./frontend/images/home1.PNG" width="600" alt="Home Page 1"/>
 
 ### 🛒 Product Page
-![Product Page](./images/home2.PNG)
-![Product Page](./images/home2.PNG)
+<img src="./frontend/images/home2.PNG" width="600" alt="Product Page"/>
+<img src="./frontend/images/home3.PNG" width="600" alt="Product Page 2"/>
 
-### 🧍 Login & Register
-![Login Page](./images/login.PNG)
-![Register Page](./images/register.PNG)
+### 🔐 Login & Register
+<img src="./frontend/images/login.PNG" width="600" alt="Login Page"/>
+<img src="./frontend/images/register.PNG" width="600" alt="Register Page"/>
 
-### 🛍️ Cart Page
-![Cart Page](./images/cart1.PNG)
-![Cart Page](./images/cart3.PNG)
+### 🛍 Cart Page
+<img src="./frontend/images/cart1.PNG" width="600" alt="Cart Page"/>
+<img src="./frontend/images/cart3.PNG" width="600" alt="CartPage"/>
 
 ### 🧑‍💼 Admin Dashboard
-![Admin Dashboard](./images/admin.PNG)
+<img src="./frontend/images/admin.PNG" width="600" alt="Admin Dashboard"/>
 
 ### ⚙️ Footer Section
-![Footer](./images/footer.PNG)
+<img src="./frontend/images/footer.PNG" width="600" alt="Footer"/>
