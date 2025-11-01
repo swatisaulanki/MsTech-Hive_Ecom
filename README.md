@@ -68,6 +68,18 @@ npm start
 - **Admin:** Has full access to product and order management through the admin dashboard.
 
 ---
+---
+
+## 🌐 Live Demo
+
+### 🚀 Frontend (React)
+🔗 [Live Frontend App](https://ms-tech-hive-ecom.vercel.app/)
+
+### ⚙️ Backend (API)
+🔗 [Live Backend API](https://mstech-hive-ecom.onrender.com/)
+
+---
+
 
 
 ### 🏠 Home Page
