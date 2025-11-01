@@ -13,7 +13,6 @@ export const addOrder = async (req, res) => {
       return res.status(400).json({ message: "Missing shipping details or total price" });
     }
 
-    // Create the order
     const order = new Order({
       user: req.user._id,
       orderItems,
