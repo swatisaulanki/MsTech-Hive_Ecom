@@ -38,7 +38,7 @@ const Home = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 1 }}
           >
-            Welcome To Ms Tech Hive
+            Welcome To MsTechHive
           </motion.h1>
 
           <motion.h2

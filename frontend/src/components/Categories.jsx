@@ -12,38 +12,48 @@ const categories = [
 
 const Categories = () => {
   return (
-    <div className="font-poppins bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-20">
-      <div className="container mx-auto px-6">
-        <h2 className="text-4xl md:text-5xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-yellow-400 mb-14">
-          Browse Our Categories
+    <div className="font-poppins relative bg-gradient-to-br from-[#0e001f] via-[#1a002f] to-[#0b0018] py-24 overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(236,72,153,0.15),transparent_60%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(147,51,234,0.15),transparent_70%)]" />
+
+      <div className="container mx-auto px-6 relative z-10">
+        <h2 className="text-5xl md:text-6xl font-extrabold text-center mb-16 bg-gradient-to-r from-purple-300 via-pink-400 to-yellow-200 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(236,72,153,0.4)]">
+          Explore by Category
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
-          {categories.map((category) => (
+        {/* Category Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-12">
+          {categories.map((category, i) => (
             <Link
               to={`/category/${category.name.toLowerCase()}`}
-              key={category.name}
-              className="group relative block overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500"
+              key={i}
+              className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 backdrop-blur-xl border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_50px_rgba(236,72,153,0.3)] transition-all duration-700"
             >
+              {/* Image */}
               <img
                 src={category.image}
                 alt={category.name}
-                className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+                className="w-full h-72 object-cover rounded-3xl transform group-hover:scale-110 transition-transform duration-700 ease-out"
               />
 
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:opacity-80 transition-opacity duration-300"></div>
+              {/* Overlay Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent group-hover:opacity-80 transition-opacity duration-500"></div>
 
-              {/* Glass Card Content */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] bg-white/10 backdrop-blur-md rounded-xl p-4 text-center border border-white/20 group-hover:bg-white/20 transition-all duration-300">
-                <span className="text-4xl mb-2 block">{category.icon}</span>
-                <h3 className="text-lg md:text-xl font-semibold text-white tracking-wide">
+              {/* Glass Info Box */}
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[85%] bg-white/10 backdrop-blur-lg rounded-2xl py-5 px-4 text-center border border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.1)] group-hover:bg-white/15 transition-all duration-500">
+                <span className="text-5xl block mb-2 drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]">
+                  {category.icon}
+                </span>
+                <h3 className="text-xl md:text-2xl font-semibold text-white tracking-wide group-hover:text-pink-400 transition-colors duration-500">
                   {category.name}
                 </h3>
               </div>
 
-              {/* Hover Glow Effect */}
-              <div className="absolute inset-0 border border-transparent group-hover:border-pink-500/60 rounded-2xl transition-all duration-500"></div>
+              {/* Border Glow on Hover */}
+              <div className="absolute inset-0 rounded-3xl border border-transparent group-hover:border-pink-500/60 transition-all duration-700"></div>
+
+              {/* Subtle Light Reflection */}
+              <div className="absolute top-0 left-0 w-full h-full opacity-0 group-hover:opacity-100 bg-gradient-to-b from-white/20 to-transparent rounded-3xl transition-all duration-700 mix-blend-overlay"></div>
             </Link>
           ))}
         </div>

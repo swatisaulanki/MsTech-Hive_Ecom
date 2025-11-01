@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../pages/context/AuthContext"
+import { useAuth } from "../context/AuthContext"
 import AuthFormWrapper from "../components/AuthFormWrapper";
 
 const API_LOGIN = "https://mstech-hive-ecom.onrender.com/api/auth/login";
@@ -42,7 +42,7 @@ const Login = () => {
       }
 
       if (res.ok) {
-        //  Canonical email and user object
+      // email and user object
         const userEmail =
           (data && (data.user?.email || data.email)) ||
           form.email.trim().toLowerCase();
@@ -50,7 +50,7 @@ const Login = () => {
         const userToStore = data?.user || { email: userEmail };
         const token = data?.token || null;
 
-        //  Save to AuthContext (keeps Navbar in sync)
+        //  Save to AuthContext
         setUser(userToStore);
         setToken(token);
 

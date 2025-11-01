@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { HiOutlineMenuAlt3, HiX } from "react-icons/hi";
 import { BsSearch, BsCart } from "react-icons/bs";
-import { useAuth } from "../pages/context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import mstech from "../assets/mstech-icon.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons";

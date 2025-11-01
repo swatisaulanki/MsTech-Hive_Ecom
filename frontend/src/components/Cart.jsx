@@ -1,26 +1,26 @@
+
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
-  // ✅ Load cart from localStorage
+  //  Load cart from localStorage
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
     setCartItems(storedCart);
   }, []);
 
-  // ✅ Update cart in localStorage
+  // Update cart in localStorage
   const updateCart = (updatedCart) => {
     setCartItems(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
     window.dispatchEvent(new Event("storage"));
   };
 
-  // ✅ Increase quantity
+  // Increase quantity
   const increaseQty = (id) => {
     const updated = cartItems.map((item) =>
       item.id === id ? { ...item, quantity: item.quantity + 1 } : item
@@ -28,7 +28,7 @@ const Cart = () => {
     updateCart(updated);
   };
 
-  // ✅ Decrease quantity
+  // Decrease quantity
   const decreaseQty = (id) => {
     const updated = cartItems
       .map((item) =>
@@ -40,24 +40,23 @@ const Cart = () => {
     updateCart(updated);
   };
 
-  // ✅ Remove item
+  // Remove item
   const removeItem = (id) => {
     const updated = cartItems.filter((item) => item.id !== id);
     updateCart(updated);
   };
 
-  // ✅ Total Price
+  //  Total Price
   const totalPrice = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
 
-  // ✅ Checkout Handler (calls /api/orders/add)
-  const handleCheckout = async () => {
-    const token = localStorage.getItem("token"); // user token
-
+  // Proceed to Checkout (NO backend call here)
+  const handleProceed = () => {
+    const token = localStorage.getItem("token");
     if (!token) {
-      setMessage("⚠️ Please login first to proceed.");
+      setMessage(" Please login first to proceed.");
       navigate("/login");
       return;
     }
@@ -67,42 +66,7 @@ const Cart = () => {
       return;
     }
 
-    try {
-      setLoading(true);
-      setMessage("");
-
-      const res = await fetch("https://mstech-hive-ecom.onrender.com/api/orders/add", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          items: cartItems.map((item) => ({
-            productId: item.id,
-            quantity: item.quantity,
-          })),
-          totalAmount: totalPrice,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setMessage("✅ Order placed successfully!");
-        localStorage.removeItem("cart");
-        setCartItems([]);
-        window.dispatchEvent(new Event("storage"));
-        navigate("/proceed");
-      } else {
-        setMessage(data.message || "❌ Failed to place order. Try again.");
-      }
-    } catch (error) {
-      console.error("Checkout Error:", error);
-      setMessage("🚨 Server error, please try again later.");
-    } finally {
-      setLoading(false);
-    }
+    navigate("/proceed"); //  Go to checkout page
   };
 
   return (
@@ -166,7 +130,7 @@ const Cart = () => {
                   onClick={() => removeItem(item.id)}
                   className="ml-4 px-3 py-1 bg-red-600 rounded hover:bg-red-800"
                 >
-                  🗑️ Remove
+                  Remove
                 </button>
               </div>
             </div>
@@ -180,15 +144,10 @@ const Cart = () => {
               </span>
             </h3>
             <button
-              onClick={handleCheckout}
-              disabled={loading}
-              className={`px-6 py-3 text-lg font-semibold rounded-lg transition ${
-                loading
-                  ? "bg-gray-600 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-800"
-              }`}
+              onClick={handleProceed}
+              className="px-6 py-3 text-lg font-semibold rounded-lg bg-green-600 hover:bg-green-800 transition"
             >
-              {loading ? "Processing..." : "Proceed to Checkout"}
+              Proceed to Checkout
             </button>
           </div>
         </div>
@@ -198,3 +157,4 @@ const Cart = () => {
 };
 
 export default Cart;
+

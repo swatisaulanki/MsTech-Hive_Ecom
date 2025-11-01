@@ -35,7 +35,7 @@ const Faq= () => {
   };
 
   return (
-    <div className="min-h-screen bg-custom-color2 py-16 px-6 sm:px-12 font-poppins">
+    <div className="bg-custom-color2 py-16  md:h-[680px] px-6 sm:px-12 font-poppins">
       <h2 className="text-2xl md:text-4xl font-semibold text-white text-center mb-12">
         Frequently Asked Questions
       </h2>

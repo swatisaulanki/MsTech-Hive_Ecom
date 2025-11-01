@@ -5,9 +5,9 @@ import Confetti from "react-confetti";
 
 const OrderSuccess = () => {
   useEffect(() => {
-    // Optional: Play confetti animation once the page loads
+    //  Play confetti animation once the page loads
     const confettiTimer = setTimeout(() => {
-      // Confetti stops after a few seconds
+      //stops after a few seconds
     }, 5000);
     
     return () => clearTimeout(confettiTimer);
@@ -15,7 +15,7 @@ const OrderSuccess = () => {
 
   return (
     <div className="min-h-screen bg-green-100 py-10 px-4 font-poppins relative">
-      {/* Confetti Animation */}
+      {/* Animation */}
       <Confetti width={window.innerWidth} height={window.innerHeight} />
 
       <div className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md text-center">

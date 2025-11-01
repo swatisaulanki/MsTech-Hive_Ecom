@@ -1,479 +1,397 @@
-// src/pages/AdminDashboard.jsx
-import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 const API_BASE = "https://mstech-hive-ecom.onrender.com";
-const PLACEHOLDER = "https://via.placeholder.com/200x140?text=No+Image";
+const PLACEHOLDER =
+  "https://via.placeholder.com/200x150.png?text=No+Image+Available";
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
-  const token = localStorage.getItem("token");
-  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState("products");
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [editProduct, setEditProduct] = useState(null);
+  const [message , setMessage]=useState("")
+  const token = localStorage.getItem("token");
 
-  // UI state
-  const [activeTab, setActiveTab] = useState("overview"); // overview | products | orders
-  const [productQuery, setProductQuery] = useState("");
-  const [orderQuery, setOrderQuery] = useState("");
-  const [editingProduct, setEditingProduct] = useState(null); // product object being edited
-  const [isSavingProduct, setIsSavingProduct] = useState(false);
-  const [isDeletingProduct, setIsDeletingProduct] = useState(null); // id being deleted
-  const [isUpdatingOrder, setIsUpdatingOrder] = useState(null); // order id being updated
+  // Fetch products + orders
+  const fetchAll = async () => {
+    setLoading(true);
+    try {
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const [pRes, oRes] = await Promise.allSettled([
+        fetch(`${API_BASE}/api/products`, { headers }),
+        fetch(`${API_BASE}/api/orders`, { headers }),
+      ]);
+
+      if (pRes.status === "fulfilled") {
+        const pJson = await pRes.value.json();
+        setProducts(pJson?.products || pJson || []);
+      }
+      if (oRes.status === "fulfilled") {
+        const oJson = await oRes.value.json();
+        setOrders(oJson?.orders || oJson || []);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-    let mounted = true;
-    const controller = new AbortController();
-
-    const fetchAll = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const pRes = await fetch(`${API_BASE}/api/products`, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
-        });
-        let pJson = null;
-        try {
-          pJson = await pRes.json();
-        } catch {
-          pJson = null;
-        }
-        const rawProducts = Array.isArray(pJson?.products) ? pJson.products : Array.isArray(pJson) ? pJson : (pJson?.data || []);
-
-        const oRes = await fetch(`${API_BASE}/api/orders`, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
-        });
-        let oJson = null;
-        try {
-          oJson = await oRes.json();
-        } catch {
-          oJson = null;
-        }
-        const rawOrders = Array.isArray(oJson?.orders) ? oJson.orders : Array.isArray(oJson) ? oJson : (oJson?.data || []);
-
-        const formattedProducts = (rawProducts || []).map((it) => ({
-          id: it._id || it.id || it.productId,
-          title: it.title || it.name || it.productName,
-          price: Number(it.price ?? it.cost ?? 0),
-          category: it.category || it.categories || "General",
-          image: it.thumbnail || it.image || (Array.isArray(it.images) && it.images[0]) || PLACEHOLDER,
-          raw: it,
-        }));
-
-        const formattedOrders = (rawOrders || []).map((it) => ({
-          id: it._id || it.id || it.orderId,
-          items: it.items || it.cart || it.products || [],
-          status: it.status || it.orderStatus || "pending",
-          total: Number(it.total ?? it.amount ?? it.grandTotal ?? 0),
-          customer: it.customer || it.user || it.userId || {},
-          createdAt: it.createdAt || it.created_at || null,
-          raw: it,
-        }));
-
-        if (!mounted) return;
-        setProducts(formattedProducts);
-        setOrders(formattedOrders);
-      } catch (err) {
-        if (err.name === 'AbortError') return; // ignore abort
-        console.error("Admin fetch error:", err);
-        if (!mounted) return;
-        setError("Failed to load admin data. Check console (CORS / auth).");
-        toast.error("Failed to load admin data. Check console.");
-      } finally {
-        if (!mounted) return;
-        setLoading(false);
-      }
-    };
-
     fetchAll();
-    return () => {
-      mounted = false;
-      controller.abort();
-    };
-  }, [token, navigate]);
+  }, []);
 
-  // derived stats
-  const stats = useMemo(() => {
-    const totalProducts = products.length;
-    const totalOrders = orders.length;
-    const revenue = orders.reduce((s, o) => s + (Number(o.total) || 0), 0);
-    const pending = orders.filter((o) => o.status === "pending" || o.status === "processing").length;
-    const delivered = orders.filter((o) => o.status === "delivered" || o.status === "completed").length;
-    return { totalProducts, totalOrders, revenue, pending, delivered };
-  }, [products, orders]);
-
-  // search / filter results
-  const filteredProducts = products.filter((p) =>
-    p.title?.toLowerCase().includes(productQuery.toLowerCase())
-  );
-  const filteredOrders = orders.filter((o) =>
-    String(o.id).toLowerCase().includes(orderQuery.toLowerCase()) ||
-    String(o.customer?.name || o.customer?.email || "").toLowerCase().includes(orderQuery.toLowerCase())
-  );
-
-  // product operations
-  const startEditProduct = (p) => {
-    setEditingProduct({ ...p }); // copy
-    setActiveTab("products");
-  };
-
-  const saveProduct = async () => {
-    if (!editingProduct) return;
-    setIsSavingProduct(true);
-    setError("");
+  // Create product
+  const createProduct = async (newProduct) => {
     try {
-      const payload = {
-        title: editingProduct.title,
-        price: editingProduct.price,
-        category: editingProduct.category,
-      };
-
-      const res = await fetch(`${API_BASE}/api/products/${editingProduct.id || ''}`, {
-        method: editingProduct.id ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(payload),
+      const res = await fetch(`${API_BASE}/api/products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify(newProduct),
       });
 
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `status ${res.status}`);
-      }
-
-      // optimistic UI update or add new
-      if (editingProduct.id) {
-        setProducts((prev) => prev.map((p) => (p.id === editingProduct.id ? { ...p, ...editingProduct } : p)));
-        toast.success("Product updated");
-      } else {
-        const created = await res.json().catch(() => null);
-        const newProd = {
-          id: created?.id || created?._id || Math.random().toString(36).slice(2),
-          title: editingProduct.title,
-          price: editingProduct.price,
-          category: editingProduct.category,
-          image: editingProduct.image || PLACEHOLDER,
-          raw: created || editingProduct,
-        };
-        setProducts((prev) => [newProd, ...prev]);
-        toast.success("Product added");
-      }
-
-      setEditingProduct(null);
+      if (!res.ok) throw new Error("Failed to create");
+      const data = await res.json();
+      setProducts((prev) => [...prev, data.product || data]);
+      toast.success(" Product added successfully!");
     } catch (err) {
-      console.error("Save product error:", err);
-      setError("Failed to save product. Check console for details.");
-      toast.error("Failed to save product");
-    } finally {
-      setIsSavingProduct(false);
+      toast.error("Failed to create product");
     }
   };
 
+  //  Delete product
   const deleteProduct = async (id) => {
-    // use window.confirm to satisfy linters that disallow bare globals
-    if (!window.confirm("Delete this product? This action cannot be undone.")) return;
-    setIsDeletingProduct(id);
-    setError("");
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
       const res = await fetch(`${API_BASE}/api/products/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `status ${res.status}`);
-      }
-      setProducts((prev) => prev.filter((p) => p.id !== id));
-      toast.success("Product deleted");
+      if (!res.ok) throw new Error("Delete failed");
+
+      setProducts((prev) => prev.filter((p) => p._id !== id));
+      toast.success("🗑️ Product deleted");
     } catch (err) {
-      console.error("Delete product error:", err);
-      setError("Failed to delete product.");
-      toast.error("Failed to delete product");
-    } finally {
-      setIsDeletingProduct(null);
+      toast.error("Delete failed");
     }
   };
 
-  // order operations
-  const updateOrderStatus = async (orderId, newStatus) => {
-    setIsUpdatingOrder(orderId);
-    setError("");
+  //  Update product
+  const updateProduct = async (updatedProduct) => {
     try {
-      const res = await fetch(`${API_BASE}/api/orders/${orderId}`, {
+      const res = await fetch(`${API_BASE}/api/products/${updatedProduct._id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status: newStatus }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify(updatedProduct),
       });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `status ${res.status}`);
-      }
-      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)));
-      toast.success("Order status updated");
+      if (!res.ok) throw new Error("Update failed");
+
+      const data = await res.json();
+      setProducts((prev) =>
+        prev.map((p) => (p._id === updatedProduct._id ? data.product || data : p))
+      );
+      setEditProduct(null);
+      toast.success("Product updated successfully!");
     } catch (err) {
-      console.error("Update order error:", err);
-      setError("Failed to update order.");
-      toast.error("Failed to update order");
-    } finally {
-      setIsUpdatingOrder(null);
+      toast.error("Update failed");
     }
   };
 
-  // small UI components
-  const StatCard = ({ title, value }) => (
-    <div className="bg-white/5 p-4 rounded-lg shadow-sm">
-      <div className="text-sm text-gray-400">{title}</div>
-      <div className="text-2xl font-bold">{value}</div>
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+        <p className="animate-pulse text-lg">Loading Dashboard...</p>
+      </div>
+    );
 
-  if (loading) return <div className="p-8 text-white">Loading admin dashboard...</div>;
+  // Dashboard Stats
+  const totalProducts = products.length;
+  const totalOrders = orders.length;
+  const pendingOrders = orders.filter((o) => o.status === "pending").length;
+  const completedOrders = orders.filter((o) => o.status === "completed").length;
 
   return (
-    <div className="min-h-screen p-6 bg-gradient-to-br from-gray-900 to-black text-white font-poppins">
-      <div className="max-w-7xl mx-auto">
-        <header className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <div className="flex gap-2">
-            <button
-              className={`px-4 py-2 rounded ${activeTab === "overview" ? "bg-indigo-600" : "bg-white/5"}`}
-              onClick={() => setActiveTab("overview")}
-            >
-              Overview
-            </button>
-            <button
-              className={`px-4 py-2 rounded ${activeTab === "products" ? "bg-indigo-600" : "bg-white/5"}`}
-              onClick={() => setActiveTab("products")}
-            >
-              Products
-            </button>
-            <button
-              className={`px-4 py-2 rounded ${activeTab === "orders" ? "bg-indigo-600" : "bg-white/5"}`}
-              onClick={() => setActiveTab("orders")}
-            >
-              Orders
-            </button>
-          </div>
-        </header>
+    <div className="min-h-screen bg-gray-950 text-white font-poppins p-6">
+      <h1 className="text-4xl font-bold mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-yellow-400">
+        🛠️ Admin Dashboard
+      </h1>
 
-        {error && <div className="bg-red-700/30 p-3 rounded mb-4">{error}</div>}
-
-        {activeTab === "overview" && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <StatCard title="Total Products" value={stats.totalProducts} />
-              <StatCard title="Total Orders" value={stats.totalOrders} />
-              <StatCard title="Revenue" value={`₹${Number(stats.revenue || 0).toLocaleString()}`} />
-              <StatCard title="Pending Orders" value={stats.pending} />
-            </div>
-
-            <div className="bg-white/5 p-4 rounded mb-6">
-              <h2 className="text-xl font-semibold mb-2">Recent Orders</h2>
-              <div className="space-y-3">
-                {orders.slice(0, 5).map((o) => (
-                  <div key={o.id} className="flex items-center justify-between bg-white/3 p-3 rounded">
-                    <div>
-                      <div className="font-semibold">Order #{o.id}</div>
-                      <div className="text-sm text-gray-300">{o.customer?.name || o.customer?.email || "Guest"}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">₹{(o.total || 0).toLocaleString()}</div>
-                      <div className="text-sm text-gray-300">{o.status}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white/5 p-4 rounded">
-              <h2 className="text-xl font-semibold mb-3">Latest Products</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {products.slice(0, 6).map((p) => (
-                  <div key={p.id} className="bg-white/3 p-3 rounded flex flex-col">
-                    <img
-                      src={p.image || PLACEHOLDER}
-                      alt={p.title}
-                      onError={(e) => { e.currentTarget.src = PLACEHOLDER; }}
-                      className="h-36 object-cover rounded mb-2"
-                    />
-                    <div className="flex-1">
-                      <div className="font-semibold">{p.title}</div>
-                      <div className="text-sm text-gray-300">₹{p.price}</div>
-                    </div>
-                    <div className="mt-2 flex gap-2">
-                      <button className="px-3 py-1 bg-indigo-600 rounded" onClick={() => startEditProduct(p)}>Edit</button>
-                      <button className="px-3 py-1 bg-red-600 rounded" onClick={() => deleteProduct(p.id)}>Delete</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {activeTab === "products" && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex gap-2">
-                <input
-                  value={productQuery}
-                  onChange={(e) => setProductQuery(e.target.value)}
-                  placeholder="Search products..."
-                  className="p-2 rounded bg-white/5"
-                />
-              </div>
-              <div>
-                <button
-                  className="px-3 py-2 bg-green-600 rounded"
-                  onClick={() => {
-                    setEditingProduct({ id: null, title: "", price: 0, category: "", image: PLACEHOLDER });
-                  }}
-                >
-                  + Add Product
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {filteredProducts.map((p) => (
-                <div key={p.id || p.title} className="bg-white/5 p-3 rounded flex flex-col">
-                  <img
-                    src={p.image || PLACEHOLDER}
-                    alt={p.title}
-                    onError={(e) => { e.currentTarget.src = PLACEHOLDER; }}
-                    className="h-36 object-cover rounded mb-2"
-                  />
-                  <div className="flex-1">
-                    <div className="font-semibold">{p.title}</div>
-                    <div className="text-sm text-gray-300">₹{p.price}</div>
-                    <div className="text-sm text-gray-400">{p.category}</div>
-                  </div>
-                  <div className="mt-2 flex gap-2">
-                    <button className="px-3 py-1 bg-indigo-600 rounded" onClick={() => startEditProduct(p)}>Edit</button>
-                    <button
-                      className="px-3 py-1 bg-red-600 rounded"
-                      onClick={() => deleteProduct(p.id)}
-                      disabled={isDeletingProduct === p.id}
-                    >
-                      {isDeletingProduct === p.id ? "Deleting..." : "Delete"}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {editingProduct && (
-              <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-                <div className="bg-[#0b1020] p-6 rounded w-full max-w-2xl">
-                  <h3 className="text-xl font-semibold mb-3">{editingProduct.id ? "Edit Product" : "Add Product"}</h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input
-                      className="p-2 rounded bg-white/5"
-                      value={editingProduct.title}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, title: e.target.value })}
-                      placeholder="Title"
-                    />
-                    <input
-                      className="p-2 rounded bg-white/5"
-                      value={editingProduct.price}
-                      type="number"
-                      onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
-                      placeholder="Price"
-                    />
-                    <input
-                      className="p-2 rounded bg-white/5 md:col-span-2"
-                      value={editingProduct.category}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
-                      placeholder="Category"
-                    />
-                    <input
-                      className="p-2 rounded bg-white/5 md:col-span-2"
-                      value={editingProduct.image}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, image: e.target.value })}
-                      placeholder="Image URL"
-                    />
-                  </div>
-
-                  <div className="mt-4 flex justify-end gap-2">
-                    <button className="px-4 py-2 bg-white/5 rounded" onClick={() => setEditingProduct(null)}>
-                      Cancel
-                    </button>
-                    <button
-                      className="px-4 py-2 bg-indigo-600 rounded"
-                      onClick={saveProduct}
-                      disabled={isSavingProduct}
-                    >
-                      {isSavingProduct ? "Saving..." : "Save"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === "orders" && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <input
-                value={orderQuery}
-                onChange={(e) => setOrderQuery(e.target.value)}
-                placeholder="Search orders (id / customer)..."
-                className="p-2 rounded bg-white/5 w-1/2"
-              />
-            </div>
-
-            <div className="space-y-3">
-              {filteredOrders.map((o) => (
-                <div key={o.id} className="bg-white/5 p-3 rounded flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-                  <div>
-                    <div className="font-semibold">Order #{o.id}</div>
-                    <div className="text-sm text-gray-300">{o.customer?.name || o.customer?.email || "Customer"}</div>
-                    <div className="text-sm text-gray-400">{o.items?.length || 0} items • ₹{(o.total || 0).toLocaleString()}</div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className="text-sm text-gray-300 mr-2">Status: <span className="font-semibold">{o.status}</span></div>
-                    <select
-                      value={o.status}
-                      onChange={(e) => updateOrderStatus(o.id, e.target.value)}
-                      className="p-2 rounded bg-white/5"
-                      disabled={isUpdatingOrder === o.id}
-                    >
-                      <option value="pending">pending</option>
-                      <option value="processing">processing</option>
-                      <option value="shipped">shipped</option>
-                      <option value="delivered">delivered</option>
-                      <option value="cancelled">cancelled</option>
-                    </select>
-
-                    <button
-                      className="px-3 py-1 bg-indigo-600 rounded"
-                      onClick={() => {
-                        // use window.alert instead of bare alert
-                        window.alert(JSON.stringify(o.raw, null, 2));
-                      }}
-                    >
-                      View
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      {/* Tabs */}
+      <div className="flex justify-center gap-4 mb-8">
+        {[
+          { key: "products", label: " Product Management" },
+          { key: "add", label: "Add New Product" },
+          { key: "orders", label: "Orders Overview" },
+        ].map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`px-5 py-2 rounded-xl transition-all font-medium ${
+              tab === t.key
+                ? "bg-gradient-to-r from-pink-500 to-yellow-400 text-black"
+                : "bg-gray-800 hover:bg-gray-700"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      {/* Toast container */}
-      <ToastContainer position="top-center" autoClose={2500} hideProgressBar={false} />
+      {/* Product Management */}
+      {tab === "products" && (
+        <div>
+          {/*  Stats Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            <div className="bg-gray-800 p-4 rounded-xl text-center">
+              <p className="text-gray-400">Total Products</p>
+              <h3 className="text-2xl font-bold text-yellow-400">
+                {totalProducts}
+              </h3>
+            </div>
+            <div className="bg-gray-800 p-4 rounded-xl text-center">
+              <p className="text-gray-400">Total Orders</p>
+              <h3 className="text-2xl font-bold text-pink-400">
+                {totalOrders}
+              </h3>
+            </div>
+            <div className="bg-gray-800 p-4 rounded-xl text-center">
+              <p className="text-gray-400">Pending</p>
+              <h3 className="text-2xl font-bold text-orange-400">
+                {pendingOrders}
+              </h3>
+            </div>
+            <div className="bg-gray-800 p-4 rounded-xl text-center">
+              <p className="text-gray-400">Completed</p>
+              <h3 className="text-2xl font-bold text-green-400">
+                {completedOrders}
+              </h3>
+            </div>
+          </div>
+
+          {/*  Product Table */}
+          <div className="overflow-x-auto bg-gray-800 rounded-2xl shadow-lg p-4">
+            <h2 className="text-2xl font-semibold mb-4 border-b border-gray-700 pb-3">
+              Manage Products
+            </h2>
+            <table className="min-w-full text-left text-gray-200">
+              <thead className="bg-gray-700 text-gray-300">
+                <tr>
+                  <th className="py-3 px-4">Image</th>
+                  <th className="py-3 px-4">Title</th>
+                  <th className="py-3 px-4">Price</th>
+                  <th className="py-3 px-4">Category</th>
+                  <th className="py-3 px-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((p) => (
+                  <tr
+                    key={p._id}
+                    className="border-t border-gray-700 hover:bg-gray-700/50"
+                  >
+                    <td className="py-3 px-4">
+                      <img
+                        src={p.image || PLACEHOLDER}
+                        alt={p.title}
+                        className="w-16 h-16 object-cover rounded-md"
+                      />
+                    </td>
+                    <td className="py-3 px-4">{p.title || p.name}</td>
+                    <td className="py-3 px-4">₹{p.price}</td>
+                    <td className="py-3 px-4">{p.category}</td>
+                    <td className="py-3 px-4 flex gap-3">
+                      <button
+                        onClick={() => setEditProduct(p)}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteProduct(p._id)}
+                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md"
+                      >
+                       Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Popup Edit Modal */}
+          {editProduct && (
+            <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
+              <div className="bg-gray-800 p-6 rounded-2xl w-full max-w-md relative shadow-lg">
+                <button
+                  onClick={() => setEditProduct(null)}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-white"
+                >
+                  ✖
+                </button>
+                <h2 className="text-2xl mb-4 font-semibold text-center">
+                  Edit Product
+                </h2>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const updated = {
+                      ...editProduct,
+                      title: e.target.title.value,
+                      price: e.target.price.value,
+                      category: e.target.category.value,
+                      image: e.target.image.value,
+                    };
+                    updateProduct(updated);
+                  }}
+                  className="grid gap-4"
+                >
+                  <input
+                    name="title"
+                    defaultValue={editProduct.title}
+                    className="p-3 rounded bg-gray-700 text-white"
+                    required
+                  />
+                  <input
+                    name="price"
+                    type="number"
+                    defaultValue={editProduct.price}
+                    className="p-3 rounded bg-gray-700 text-white"
+                    required
+                  />
+                  <input
+                    name="category"
+                    defaultValue={editProduct.category}
+                    className="p-3 rounded bg-gray-700 text-white"
+                    required
+                  />
+                  <input
+                    name="image"
+                    defaultValue={editProduct.image}
+                    className="p-3 rounded bg-gray-700 text-white"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-gradient-to-r from-yellow-400 to-pink-500 text-black font-semibold py-2 rounded-lg hover:scale-105 transition-all"
+                  >
+                    Save Changes
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Add Product */}
+      {tab === "add" && (
+        <div className="bg-gray-800 p-6 rounded-2xl max-w-2xl mx-auto shadow-lg">
+          <h2 className="text-2xl font-semibold mb-6 text-center">
+            Add New Product
+          </h2>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const newProduct = {
+                title: e.target.title.value,
+                price: e.target.price.value,
+                category: e.target.category.value,
+                image: e.target.image.value,
+              };
+              createProduct(newProduct);
+              e.target.reset();
+            }}
+            className="grid gap-4"
+          >
+            <input
+              name="title"
+              placeholder="Product Name"
+              className="p-3 rounded bg-gray-700 text-white"
+              required
+            />
+            <input
+              name="price"
+              type="number"
+              placeholder="Price (₹)"
+              className="p-3 rounded bg-gray-700 text-white"
+              required
+            />
+            <input
+              name="category"
+              placeholder="Category"
+              className="p-3 rounded bg-gray-700 text-white"
+              required
+            />
+            <input
+              name="image"
+              placeholder="Image URL"
+              className="p-3 rounded bg-gray-700 text-white"
+            />
+            <button
+              type="submit"
+              className="bg-gradient-to-r from-pink-500 to-yellow-400 text-black font-semibold py-2 rounded-lg hover:scale-105 transition-all"
+            >
+              Create Product
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Orders Overview */}
+      {tab === "orders" && (
+        <div className="overflow-x-auto bg-gray-800 rounded-2xl shadow-lg p-4">
+          <h2 className="text-2xl font-semibold mb-4 border-b border-gray-700 pb-3">
+            Orders Overview
+          </h2>
+          <table className="min-w-full text-left text-gray-200">
+            <thead className="bg-gray-700 text-gray-300">
+              <tr>
+                <th className="py-3 px-4">Order ID</th>
+                <th className="py-3 px-4">User</th>
+                <th className="py-3 px-4">Total</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((o) => (
+                <tr
+                  key={o._id}
+                  className="border-t border-gray-700 hover:bg-gray-700/50"
+                >
+                  <td className="py-3 px-4">{o._id}</td>
+                  <td className="py-3 px-4">{o.customer?.name || "Unknown"}</td>
+                  <td className="py-3 px-4">₹{o.total}</td>
+                  <td
+                    className={`py-3 px-4 font-semibold ${
+                      o.status === "pending"
+                        ? "text-yellow-400"
+                        : "text-green-400"
+                    }`}
+                  >
+                    {o.status}
+                  </td>
+                  <td className="py-3 px-4">
+                    {o.createdAt
+                      ? new Date(o.createdAt).toLocaleDateString("en-IN")
+                      : "-"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

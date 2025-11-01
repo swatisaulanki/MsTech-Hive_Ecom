@@ -2,10 +2,10 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 // Context
-import { AuthProvider } from "./pages/context/AuthContext";
+import { AuthProvider } from "./context/AuthContext";
 
 // Route protection
-import ProtectedRoute from "./pages/routes/ProtectedRoute";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
 // Components
 import Navbar from './components/Navbar';
@@ -75,6 +75,7 @@ const App = () => {
         <Route path="/order" element={<OrderSuccess/>} />
         <Route path="/admin" element={<AdminDashboard/>} />
         <Route path="/profileupdate" element={<ProfileUpdate/>}/>
+
         {/* Protected Routes */}
        
         <Route
